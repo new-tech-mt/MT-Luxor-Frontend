@@ -24,6 +24,8 @@ import {
   useStore,
 } from "../context/StoreContext";
 
+import SEO from "../components/SEO";
+
 function ProductDetails() {
   const { slug } = useParams();
 
@@ -115,6 +117,12 @@ function ProductDetails() {
   if (loading) {
     return (
       <main className="detail-page">
+        <SEO
+          title="Loading Watch | MT LUXOR"
+          description="Loading MT LUXOR watch details."
+          noIndex
+        />
+
         <div className="page-state">
           Loading watch...
         </div>
@@ -125,6 +133,12 @@ function ProductDetails() {
   if (error || !product) {
     return (
       <main className="detail-page">
+        <SEO
+          title="Watch Not Found | MT LUXOR"
+          description="The requested MT LUXOR watch could not be found."
+          noIndex
+        />
+
         <div className="page-state">
           <h1>
             Watch not found
@@ -206,257 +220,358 @@ function ProductDetails() {
     product.description ||
     "A refined MT Luxor timepiece designed for everyday elegance.";
 
+  const seoDescription =
+    description
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160);
+
+  const productImage =
+    images[0] || "/favicon.png";
+
+  const productUrl =
+    `${window.location.origin}/product/${encodeURIComponent(
+      slug
+    )}`;
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: description,
+    image: images.length > 0
+      ? images
+      : [
+          `${window.location.origin}/favicon.png`,
+        ],
+    brand: {
+      "@type": "Brand",
+      name: "MT LUXOR",
+    },
+    sku:
+      product.sku ||
+      product.id ||
+      product._id ||
+      undefined,
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: "PKR",
+      price: String(currentPrice),
+      availability: soldOut
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
+      seller: {
+        "@type": "Organization",
+        name: "MT LUXOR",
+      },
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: `${window.location.origin}/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Watches",
+        item: `${window.location.origin}/watches`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.name,
+        item: productUrl,
+      },
+    ],
+  };
+
   return (
-    <main className="detail-page">
+    <>
+      <SEO
+        title={`${product.name} | MT LUXOR`}
+        description={seoDescription}
+        image={productImage}
+        canonical={productUrl}
+        type="product"
+      />
 
-      <div className="luxor-container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            productSchema
+          ),
+        }}
+      />
 
-        <Link
-          to="/watches"
-          className="back-link"
-        >
-          <ArrowLeft size={16} />
-          Back to Watches
-        </Link>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbSchema
+          ),
+        }}
+      />
 
-        <div className="product-detail-grid">
+      <main className="detail-page">
 
-          <div className="product-gallery">
+        <div className="luxor-container">
 
-            <div className="product-main-image">
+          <Link
+            to="/watches"
+            className="back-link"
+          >
+            <ArrowLeft size={16} />
+            Back to Watches
+          </Link>
 
-              {images.length > 0 ? (
-                <img
-                  src={
-                    images[
-                      selectedImage
-                    ] || images[0]
-                  }
-                  alt={product.name}
-                />
-              ) : (
-                <div className="product-detail-placeholder">
-                  <span>MT LUXOR</span>
-                  <small>
-                    TIMEPIECE
-                  </small>
+          <div className="product-detail-grid">
+
+            <div className="product-gallery">
+
+              <div className="product-main-image">
+
+                {images.length > 0 ? (
+                  <img
+                    src={
+                      images[
+                        selectedImage
+                      ] || images[0]
+                    }
+                    alt={`${product.name} watch - MT LUXOR`}
+                  />
+                ) : (
+                  <div className="product-detail-placeholder">
+                    <span>MT LUXOR</span>
+                    <small>
+                      TIMEPIECE
+                    </small>
+                  </div>
+                )}
+
+                {soldOut && (
+                  <span className="detail-sold-badge">
+                    SOLD OUT
+                  </span>
+                )}
+
+              </div>
+
+              {images.length > 1 && (
+                <div className="product-thumbnails">
+                  {images.map(
+                    (image, index) => (
+                      <button
+                        type="button"
+                        key={image + index}
+                        className={
+                          selectedImage === index
+                            ? "product-thumbnail active"
+                            : "product-thumbnail"
+                        }
+                        onClick={() =>
+                          setSelectedImage(
+                            index
+                          )
+                        }
+                      >
+                        <img
+                          src={image}
+                          alt={`${product.name} watch image ${index + 1} - MT LUXOR`}
+                        />
+                      </button>
+                    )
+                  )}
                 </div>
-              )}
-
-              {soldOut && (
-                <span className="detail-sold-badge">
-                  SOLD OUT
-                </span>
               )}
 
             </div>
 
-            {images.length > 1 && (
-              <div className="product-thumbnails">
-                {images.map(
-                  (image, index) => (
+            <div className="product-detail-content">
+
+              {product.badge && (
+                <span className="detail-badge">
+                  {product.badge}
+                </span>
+              )}
+
+              <span className="eyebrow">
+                MT LUXOR
+              </span>
+
+              <h1>
+                {product.name}
+              </h1>
+
+              <div className="detail-price">
+
+                <strong>
+                  {formatPrice(
+                    currentPrice
+                  )}
+                </strong>
+
+                {hasSale && (
+                  <del>
+                    {formatPrice(
+                      regularPrice
+                    )}
+                  </del>
+                )}
+
+              </div>
+
+              <p className="detail-description">
+                {description}
+              </p>
+
+              <div className="detail-stock">
+                {soldOut
+                  ? "Currently unavailable"
+                  : `${stock} available`}
+              </div>
+
+              {!soldOut && (
+                <div className="detail-actions">
+
+                  <div className="quantity-control">
+
                     <button
                       type="button"
-                      key={image + index}
-                      className={
-                        selectedImage === index
-                          ? "product-thumbnail active"
-                          : "product-thumbnail"
-                      }
-                      onClick={() =>
-                        setSelectedImage(
-                          index
-                        )
-                      }
+                      onClick={decrease}
+                      aria-label="Decrease quantity"
                     >
-                      <img
-                        src={image}
-                        alt={`${product.name} ${index + 1}`}
-                      />
+                      <Minus size={16} />
                     </button>
-                  )
-                )}
-              </div>
-            )}
 
-          </div>
+                    <span>
+                      {quantity}
+                    </span>
 
-          <div className="product-detail-content">
+                    <button
+                      type="button"
+                      onClick={increase}
+                      aria-label="Increase quantity"
+                    >
+                      <Plus size={16} />
+                    </button>
 
-            {product.badge && (
-              <span className="detail-badge">
-                {product.badge}
-              </span>
-            )}
-
-            <span className="eyebrow">
-              MT LUXOR
-            </span>
-
-            <h1>
-              {product.name}
-            </h1>
-
-            <div className="detail-price">
-
-              <strong>
-                {formatPrice(
-                  currentPrice
-                )}
-              </strong>
-
-              {hasSale && (
-                <del>
-                  {formatPrice(
-                    regularPrice
-                  )}
-                </del>
-              )}
-
-            </div>
-
-            <p className="detail-description">
-              {description}
-            </p>
-
-            <div className="detail-stock">
-              {soldOut
-                ? "Currently unavailable"
-                : `${stock} available`}
-            </div>
-
-            {!soldOut && (
-              <div className="detail-actions">
-
-                <div className="quantity-control">
+                  </div>
 
                   <button
                     type="button"
-                    onClick={decrease}
-                    aria-label="Decrease quantity"
+                    className="button button-outline"
+                    onClick={handleAdd}
                   >
-                    <Minus size={16} />
+                    <ShoppingBag size={17} />
+                    Add to Cart
                   </button>
+
+                  <button
+                    type="button"
+                    className="button button-primary"
+                    onClick={handleBuy}
+                  >
+                    Buy Now
+                  </button>
+
+                </div>
+              )}
+
+              <div className="detail-benefits">
+
+                <div>
+                  <Truck size={20} />
 
                   <span>
-                    {quantity}
+                    Nationwide Delivery
                   </span>
-
-                  <button
-                    type="button"
-                    onClick={increase}
-                    aria-label="Increase quantity"
-                  >
-                    <Plus size={16} />
-                  </button>
-
                 </div>
 
-                <button
-                  type="button"
-                  className="button button-outline"
-                  onClick={handleAdd}
-                >
-                  <ShoppingBag size={17} />
-                  Add to Cart
-                </button>
+                <div>
+                  <ShieldCheck size={20} />
 
-                <button
-                  type="button"
-                  className="button button-primary"
-                  onClick={handleBuy}
-                >
-                  Buy Now
-                </button>
+                  <span>
+                    Quality Timepieces
+                  </span>
+                </div>
 
               </div>
-            )}
 
-            <div className="detail-benefits">
+              {Array.isArray(
+                product.features
+              ) &&
+                product.features.length >
+                  0 && (
+                  <div className="detail-info-block">
+                    <h2>Features</h2>
 
-              <div>
-                <Truck size={20} />
+                    <ul>
+                      {product.features.map(
+                        (feature, index) => (
+                          <li
+                            key={index}
+                          >
+                            {typeof feature ===
+                            "string"
+                              ? feature
+                              : feature?.name ||
+                                feature?.value ||
+                                ""}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                )}
 
-                <span>
-                  Nationwide Delivery
-                </span>
-              </div>
+              {product.specifications &&
+                typeof product.specifications ===
+                  "object" && (
+                  <div className="detail-info-block">
+                    <h2>
+                      Specifications
+                    </h2>
 
-              <div>
-                <ShieldCheck size={20} />
+                    <div className="specification-list">
+                      {Object.entries(
+                        product.specifications
+                      ).map(
+                        ([key, value]) => (
+                          <div
+                            key={key}
+                          >
+                            <span>
+                              {key}
+                            </span>
 
-                <span>
-                  Quality Timepieces
-                </span>
-              </div>
+                            <strong>
+                              {String(
+                                value
+                              )}
+                            </strong>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
 
             </div>
 
-            {Array.isArray(
-              product.features
-            ) &&
-              product.features.length >
-                0 && (
-                <div className="detail-info-block">
-                  <h2>Features</h2>
-
-                  <ul>
-                    {product.features.map(
-                      (feature, index) => (
-                        <li
-                          key={index}
-                        >
-                          {typeof feature ===
-                          "string"
-                            ? feature
-                            : feature?.name ||
-                              feature?.value ||
-                              ""}
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              )}
-
-            {product.specifications &&
-              typeof product.specifications ===
-                "object" && (
-                <div className="detail-info-block">
-                  <h2>
-                    Specifications
-                  </h2>
-
-                  <div className="specification-list">
-                    {Object.entries(
-                      product.specifications
-                    ).map(
-                      ([key, value]) => (
-                        <div
-                          key={key}
-                        >
-                          <span>
-                            {key}
-                          </span>
-
-                          <strong>
-                            {String(
-                              value
-                            )}
-                          </strong>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-
           </div>
-
         </div>
-      </div>
 
-    </main>
+      </main>
+    </>
   );
 }
 

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-success
+
+Sitemap: https://mtluxor.vercel.app/sitemap.xml
